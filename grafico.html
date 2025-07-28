@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualização de Gráfico: Plano A vs. Plano B</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for creating the chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8">
+        <div class="mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Comparativo de Planos de Investimento</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Análise da progressão de valores entre o Plano A e o Plano B ao longo de 5 anos.</p>
+        </div>
+        
+        <!-- Canvas element where the chart will be rendered -->
+        <div class="w-full h-96">
+            <canvas id="comparisonChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // --- Data from the user ---
+        // Labels for the X-axis
+        const labels = ['Inicial', 'Ano 1', 'Ano 2', 'Ano 3', 'Ano 4', 'Ano 5'];
+
+        // Data for Plano A
+        const dataPlanoA = [868182.00, 1005462.00, 1142742.00, 1280022.00, 1417302.00, 1554582.00];
+
+        // Data for Plano B
+        const dataPlanoB = [45000.00, 361800.00, 678600.00, 995400.00, 1312200.00, 1629000.00];
+
+        // --- Chart Configuration ---
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Plano A',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)', // Blue-ish tint
+                    borderColor: 'rgba(59, 130, 246, 1)', // Solid blue line
+                    data: dataPlanoA,
+                    fill: true,
+                    tension: 0.4, // Makes the line curved
+                    pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                },
+                {
+                    label: 'Plano B',
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)', // Red-ish tint
+                    borderColor: 'rgba(239, 68, 68, 1)', // Solid red line
+                    data: dataPlanoB,
+                    fill: true,
+                    tension: 0.4, // Makes the line curved
+                    pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(239, 68, 68, 1)',
+                }
+            ]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14,
+                                weight: '500'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        // Customizing the tooltip to show currency
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    // Formats the number as Brazilian currency (R$)
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 14
+                        },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxPadding: 4,
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Período',
+                            font: {
+                                size: 16,
+                                weight: '600'
+                            }
+                        },
+                        grid: {
+                            display: false // Hides the vertical grid lines
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Valor Acumulado (R$)',
+                            font: {
+                                size: 16,
+                                weight: '600'
+                            }
+                        },
+                        ticks: {
+                            // Customizing the Y-axis ticks to show abbreviated values
+                            callback: function(value, index, values) {
+                                if (value >= 1000000) {
+                                    return 'R$ ' + (value / 1000000).toFixed(1) + 'M';
+                                }
+                                if (value >= 1000) {
+                                    return 'R$ ' + (value / 1000) + 'k';
+                                }
+                                return 'R$ ' + value;
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.2)' // Lightens the horizontal grid lines
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+            }
+        };
+
+        // --- Render the Chart ---
+        const myChart = new Chart(
+            document.getElementById('comparisonChart'),
+            config
+        );
+    </script>
+</body>
+</html>
